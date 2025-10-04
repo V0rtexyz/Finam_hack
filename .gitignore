@@ -1,0 +1,35 @@
+# Python cache & build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc.*
+*.so
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+env/
+venv/
+.env
+
+# IDE / tooling
+.idea/
+.vscode/
+*.code-workspace
+
+# Project artifacts
+artifacts/
+reports/
+dataset/*.parquet
+
+# Secrets & credentials
+.env
+private.pem
+.authorized_key.json
+
+# Local caches
+artifacts/embeddings_cache.sqlite
+*.log
