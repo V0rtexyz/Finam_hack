@@ -16,14 +16,14 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-2. Настройте переменные окружения. Создайте файл `.env` (или задайте переменные в системе) и укажите ключи Яндекс Облака:
+2. Настройте переменные окружения
 
 ```bash
-copy .env.example .env
+#Добавьте приватные ключи
 # Откройте .env и задайте FOLDER_ID, SERVICE_ACCOUNT_ID, KEY_ID, PRIVATE_KEY, API_KEY_EMBEDDER
 ```
 
-3. Запустите приложение Streamlit:
+3. Запустите приложение через Fast API:
 
 ```bash
 python -m uvicorn api_server:app --reload --port 8000 
