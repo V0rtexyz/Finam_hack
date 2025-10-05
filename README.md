@@ -26,7 +26,7 @@ python -m venv .venv
 3. Запустите приложение через Fast API:
 
 ```bash
-python -m uvicorn api_server:app --reload --port 8000 
+.venv\Scripts\python -m uvicorn api_server:app --reload --port 8000
 ```
 4. Установка зависимостей фронтенда в отдельном окне
 
