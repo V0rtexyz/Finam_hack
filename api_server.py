@@ -545,8 +545,6 @@ def _build_state_sync() -> StateResponse:
     dataset_state, dataset_path = _build_dataset_state(metadata, DEFAULT_DATASET_NAME)
 
     proj_df, clusters_df, labels, quality_metrics, cluster_terms = load_topic_artifacts()
-    if proj_df is None or clusters_df is None:
-        raise HTTPException(status_code=404, detail="Topic artifacts not found. Run analysis first.")
 
     messages_df = load_parquet(cfg.messages_parquet)
     if messages_df is None:
@@ -558,19 +556,45 @@ def _build_state_sync() -> StateResponse:
     labels_map = labels or {}
     cluster_terms_map = cluster_terms or {}
     metrics = dict(quality_metrics or {})
-    total_messages = int(metrics.get("total_messages", len(clusters_df))) if isinstance(metrics, dict) else len(clusters_df)
 
     params_dict = dataset_state.params or {}
     cluster_limit = _coerce_int(params_dict.get("cluster_limit")) if isinstance(params_dict, dict) else None
 
     if dataset_path:
         dataset_state = dataset_state.model_copy(update={"path": _relativize(dataset_path)})
-    if dataset_state.total_messages == 0 and total_messages:
-        dataset_state = dataset_state.model_copy(update={"total_messages": total_messages})
     if dataset_state.updated_at is None and metadata.get("updated_at"):
         dataset_state = dataset_state.model_copy(update={"updated_at": _parse_datetime(metadata.get("updated_at"))})
     if params_dict and dataset_state.params is None:
         dataset_state = dataset_state.model_copy(update={"params": params_dict})
+
+    total_messages = 0
+    if metrics.get("total_messages"):
+        try:
+            total_messages = int(metrics["total_messages"])
+        except Exception:
+            total_messages = 0
+    if not total_messages and clusters_df is not None:
+        total_messages = len(clusters_df)
+    if not total_messages and messages_df is not None:
+        total_messages = len(messages_df)
+
+    if dataset_state.total_messages == 0 and total_messages:
+        dataset_state = dataset_state.model_copy(update={"total_messages": total_messages})
+
+    if proj_df is None or clusters_df is None:
+        metrics["visible_clusters"] = 0
+        metrics["unique_clusters"] = 0
+        intent_suggestions = list(labels_map.values()) if labels_map else []
+        return StateResponse(
+            generated_at=datetime.utcnow(),
+            active_dataset=dataset_state,
+            datasets=datasets,
+            quality_metrics=metrics,
+            clusters=[],
+            topic_map=[],
+            topic_timeline=[],
+            intent_suggestions=intent_suggestions,
+        )
 
     cluster_summary = _summarize_clusters(
         clusters_df,
